@@ -40,14 +40,14 @@ public class ReservationServiceImpl implements ReservationService {
 
                 int amountOfCurrentSpot = spotInParkingLot.getPricePerHour() * timeInHours;
 
-                if(spotInParkingLot.getSpotType().equals(SpotType.OTHERS)){
+                if(spotInParkingLot.getSpotType().equals(SpotType.OTHERS) && !spotInParkingLot.isOccupied()){
 
                     if(amountOfCurrentSpot < amount){
                         amount = amountOfCurrentSpot;
                         spot = spotInParkingLot;
 
                     }
-                }else if(spotInParkingLot.getSpotType().equals(SpotType.FOUR_WHEELER)){
+                }else if(spotInParkingLot.getSpotType().equals(SpotType.FOUR_WHEELER) && !spotInParkingLot.isOccupied()){
 
                     if(numberOfWheels == 2 || numberOfWheels == 4){
 
@@ -59,7 +59,7 @@ public class ReservationServiceImpl implements ReservationService {
                     }
                 }else{
 
-                    if(numberOfWheels == 2){
+                    if(numberOfWheels == 2 && !spotInParkingLot.isOccupied()){
 
                         if(amountOfCurrentSpot < amount){
                             amount = amountOfCurrentSpot;
@@ -83,6 +83,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         user.getReservationList().add(reservation);
         spot.getReservationList().add(reservation);
+        spot.setOccupied(true);
 
         spotRepository3.save(spot);
         userRepository3.save(user);
