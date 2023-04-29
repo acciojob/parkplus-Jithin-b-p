@@ -1,5 +1,9 @@
 package com.driver.services.impl;
 
+import com.driver.Entity.ParkingLot;
+import com.driver.Entity.Reservation;
+import com.driver.Entity.Spot;
+import com.driver.Entity.User;
 import com.driver.model.*;
 import com.driver.repository.ParkingLotRepository;
 import com.driver.repository.ReservationRepository;
@@ -23,6 +27,68 @@ public class ReservationServiceImpl implements ReservationService {
     ParkingLotRepository parkingLotRepository3;
     @Override
     public Reservation reserveSpot(Integer userId, Integer parkingLotId, Integer timeInHours, Integer numberOfWheels) throws Exception {
+
+        if(!userRepository3.findById(userId).isPresent() || !parkingLotRepository3.findById(parkingLotId).isPresent()){
+            throw new Exception("Cannot make reservation");
+        }
+
+        User user = userRepository3.findById(userId).get();
+        ParkingLot parkingLot = parkingLotRepository3.findById(parkingLotId).get();
+        Spot spot = null;
+        int amount = Integer.MAX_VALUE;
+        for(Spot spotInParkingLot: parkingLot.getSpotList()){
+
+            if(!spotInParkingLot.isOccupied()){
+
+                int amountOfCurrentSpot = spotInParkingLot.getPricePerHour() * timeInHours;
+
+                if(spotInParkingLot.getSpotType().equals(SpotType.OTHERS)){
+
+                    if(amountOfCurrentSpot < amount){
+                        amount = amountOfCurrentSpot;
+                        spot = spotInParkingLot;
+
+                    }
+                }else if(spotInParkingLot.getSpotType().equals(SpotType.FOUR_WHEELER)){
+
+                    if(numberOfWheels == 2 || numberOfWheels == 4){
+
+                        if(amountOfCurrentSpot < amount){
+                            amount = amountOfCurrentSpot;
+                            spot = spotInParkingLot;
+
+                        }
+                    }
+                }else{
+
+                    if(numberOfWheels == 2){
+
+                        if(amountOfCurrentSpot < amount){
+                            amount = amountOfCurrentSpot;
+                            spot = spotInParkingLot;
+
+                        }
+                    }
+                }
+            }
+        }
+
+        if(spot == null){
+            throw new Exception("Cannot make reservation");
+        }
+
+        Reservation reservation = new Reservation();
+        reservation.setNumberOfHours(timeInHours);
+
+        reservation.setUser(user);
+        reservation.setSpot(spot);
+
+        user.getReservationList().add(reservation);
+        spot.getReservationList().add(reservation);
+
+        spotRepository3.save(spot);
+        userRepository3.save(user);
+        return reservationRepository3.save(reservation);
 
     }
 }
